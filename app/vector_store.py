@@ -30,12 +30,7 @@ class VectorStoreManager:
         self.db_path = Path(db_path)
         self.db_path.mkdir(parents=True, exist_ok=True)
         self.collection_name = collection_name
-
-        try:
-            import chromadb
-        except ImportError:
-            print("ChromaDB not installed. Run: pip install chromadb")
-            sys.exit(1)
+        import chromadb
 
         self._chroma_client = chromadb.PersistentClient(path=str(self.db_path))
         self._collection = self._chroma_client.get_or_create_collection(
@@ -92,3 +87,34 @@ class VectorStoreManager:
             "total_items": self._collection.count(),
             "db_path": str(self.db_path),
         }
+
+    def search(self, query_text: str, model: str, n_results: int = 5) -> list:
+        """
+        Searches the vector store for a given query.
+        """
+        print(f"Searching for: '{query_text}' using model {model}")
+
+        # Get embedding for the query
+        query_embedding = get_ollama_embedding(model, query_text)
+
+        # Query the collection
+        results = self._collection.query(
+            query_embeddings=[query_embedding],
+            n_results=n_results
+        )
+
+        # Format and return results
+        formatted_results = []
+        if results and results.get("documents") and results["documents"][0]:
+            for i, doc in enumerate(results["documents"][0]):
+                meta = results["metadatas"][0][i] if results.get("metadatas") else {}
+                distance = results["distances"][0][i] if results.get("distances") else 0
+                formatted_results.append(
+                    {
+                        "content": doc,
+                        "source": meta.get("source", "unknown"),
+                        "relevance": 1 - distance,  # Convert distance to similarity
+                    }
+                )
+        
+        return formatted_results

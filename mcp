@@ -1,0 +1,8 @@
+#!/bin/bash
+# Wrapper script for the RAG-MCP tool
+
+# Get the directory where the script is located
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
+
+# Run the main Python script, passing all arguments
+uv run --manifest-path "$SCRIPT_DIR/pyproject.toml" -- python "$SCRIPT_DIR/main.py" "$@"
