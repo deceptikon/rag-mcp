@@ -1,106 +1,59 @@
-# rag-mcp: Codebase-Aware RAG Context Builder
+# 🧠 VOX Brain (MCP Server)
 
-`rag-mcp` is a command-line tool for creating a local Retrieval-Augmented Generation (RAG) context from your project's codebase. It scans your project, chunks the code and documentation, and then uses a local Ollama embedding model to populate a vector database.
-
-This tool is designed to be an extension of the existing `ctx` workflow, allowing you to build a powerful semantic search capability for your projects without disrupting your current development process.
+A Model Context Protocol (MCP) server that provides RAG (Retrieval Augmented Generation) and Context capabilities for OpenCode agents.
 
 ## Features
 
-*   **Code-Aware Chunking:** Intelligently chunks code and documentation based on file type.
-*   **Local First:** Uses your own local Ollama instance for embedding generation. No data leaves your machine.
-*   **Vector Database:** Stores embeddings and associated metadata (file path, content) in a local [ChromaDB](https://www.trychroma.com/) database (which uses SQLite).
-*   **Simple CLI:** A straightforward command-line interface for indexing your projects.
-
-## Prerequisites
-
-Before you begin, ensure you have the following installed:
-
-1.  **Python 3.8+**
-2.  **Ollama:** Follow the instructions at [ollama.ai](https://ollama.ai/) to install and run Ollama on your system.
-3.  **An Ollama Embedding Model:** You will need an embedding model to generate the vectors. We recommend `nomic-embed-text`. You can pull it with the following command:
-    ```bash
-    ollama pull nomic-embed-text
-    ```
-
-## Installation
-
-1.  **Clone the repository:**
-    ```bash
-    git clone <repository_url>
-    cd rag-mcp
-    ```
-
-2.  **Install the required Python packages using uv:**
-    ```bash
-    uv sync
-    ```
+- **Vector Search:** Indexes codebase using `chromadb` and `nomic-embed-text`.
+- **RAG Query:** Answering questions about the codebase using `qwen2.5-coder`.
+- **Context Resources:** Exposes project rules, documentation, and file structure via MCP resources.
 
 ## Usage
 
-The primary commands for `rag-mcp` are `index` and `search`.
+This server is managed automatically by the `vox` CLI tool.
 
-### Indexing a Project
-
-To index a project, run the following command using `uv`:
-
+### 1. Setup
+First, register your project to get a **Project ID**:
 ```bash
-uv run main.py index /path/to/your/project --model nomic-embed-text
+vox init /path/to/your/project "Project Name"
+# Output: Returns a hash ID (e.g., cdb4ee2a)
 ```
 
-**Arguments:**
-
-*   `project_path` (required): The path to the project directory you want to index.
-*   `--model` (optional, default: `nomic-embed-text`): The name of the Ollama embedding model to use. This model must be available in your local Ollama instance.
-
-### Searching a Project
-
-To search an indexed project, run the following command:
-
+List all registered projects:
 ```bash
-uv run main.py search /path/to/your/project "your search query" --model nomic-embed-text
+vox list
 ```
 
-**Arguments:**
-
-*   `project_path` (required): The path to the project directory you want to search in.
-*   `query` (required): The search query.
-*   `--model` (optional, default: `nomic-embed-text`): The name of the Ollama embedding model to use.
-*   `--top_k` (optional, default: `5`): The number of results to return.
-
-## Global Alias
-
-To make the `rag-mcp` tool easily accessible from anywhere, you can use the included `mcp` wrapper script.
-
-1.  **Make sure the script is executable:**
-    ```bash
-    chmod +x mcp
-    ```
-
-2.  **Create a symbolic link** to the `mcp` script in a directory that is in your system's `PATH`. A common choice is `/usr/local/bin`.
-
-    ```bash
-    sudo ln -s /path/to/your/rag-mcp/mcp /usr/local/bin/mcp
-    ```
-    *Replace `/path/to/your/rag-mcp` with the absolute path to the `rag-mcp` directory.*
-
-3.  **Verify the installation** by running:
-    ```bash
-    mcp --help
-    ```
-
-Now you can use `mcp` as a global command:
-
+### 2. Indexing (Memory)
+Index the codebase into the Vector Brain:
 ```bash
-mcp index /path/to/your/project
-mcp search /path/to/your/project "your search query"
+vox sync-v <project_id>
 ```
 
-## How it Works
-1.  **Scanning and Chunking:** The tool recursively scans the specified project directory. It uses logic adapted from `RAG/scanner.py` to intelligently chunk files based on their type (e.g., Python, JavaScript, Markdown), while ignoring irrelevant files and directories (like `node_modules`, `.git`, etc.).
-2.  **Embedding:** For each chunk, the tool makes a request to your local Ollama API to generate a vector embedding.
-3.  **Storage:** The chunk's content, metadata (e.g., source file path), and the generated embedding are stored together in a local ChromaDB database.
+### 3. Interaction
+Search for code by meaning:
+```bash
+vox search-v <project_id> "how does authentication work?"
+```
 
-## Future Development
+Ask the AI to explain something:
+```bash
+vox ask-v <project_id> "Explain the main logic in server.py"
+```
 
-*   **`ctx` Integration:** Deeper integration with the `ctx` tool to expose search results within your existing workflow.
-*   **Web UI:** A simple web interface for visualizing and interacting with the context.
+### 4. Rules & Docs
+Add context that isn't in the code (stored as JSONL resources):
+```bash
+vox add-doc <project_id> rule "Always use async/await" "Async Standard"
+vox list-docs <project_id>
+```
+
+## Architecture
+
+- `server.py`: Main FastMCP entry point.
+- `app/chunker.py`: Intelligent code chunking logic.
+- `app/vector_store.py`: ChromaDB management.
+
+## Installation
+
+Installed automatically via `ctx-core/install.sh`.
