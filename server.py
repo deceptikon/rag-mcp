@@ -1,7 +1,7 @@
+import sys
 import os
 import logging
 import json
-import os
 import ollama
 from typing import Optional
 from mcp.server.fastmcp import FastMCP
@@ -52,6 +52,7 @@ async def index_project(project_path: str, model: str = "nomic-embed-text") -> s
         vector_store.add_documents(documents, model=model)
 
         logger.info(f"✅ Indexing complete for {project_path}")
+        sys.stdout.flush()
         return f"Successfully indexed {len(documents)} chunks into {collection_name}."
     except Exception as e:
         logger.exception("🔥 Indexing failed")
