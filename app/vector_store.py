@@ -53,7 +53,7 @@ class VectorStoreManager:
             doc_contents.append(doc.page_content)
             metadatas.append(doc.metadata)
             ids.append(f"doc_{i}") # Simple ID for now
-            
+
             # Get embedding from Ollama
             embedding = get_ollama_embedding(model, doc.page_content)
             embeddings.append(embedding)
@@ -88,9 +88,9 @@ class VectorStoreManager:
             "db_path": str(self.db_path),
         }
 
-    def search(self, query_text: str, model: str, n_results: int = 5) -> list:
+    def search(self, query_text: str, model: str, n_results: int = 10, where_filter: dict | None = None) -> list:
         """
-        Searches the vector store for a given query.
+        Searches the vector store for a given query with optional metadata filtering.
         """
         print(f"Searching for: '{query_text}' using model {model}")
 
@@ -100,7 +100,8 @@ class VectorStoreManager:
         # Query the collection
         results = self._collection.query(
             query_embeddings=[query_embedding],
-            n_results=n_results
+            n_results=n_results,
+            where=where_filter
         )
 
         # Format and return results
@@ -116,5 +117,5 @@ class VectorStoreManager:
                         "relevance": 1 - distance,  # Convert distance to similarity
                     }
                 )
-        
+
         return formatted_results

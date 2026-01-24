@@ -37,7 +37,7 @@ For initial population, we can leverage the `index-dir` command from `CTX/extens
 **Proposed approach for initial population:**
 
 1.  **Direct use of `vector_store.py`'s `index-dir` (for quick start):**
-    This would involve configuring the `project_id` and `path` in a `config.json` file for the project (e.g., in `~/.opencode/context/projects/<project_id>/config.json`) and then running:
+    This would involve configuring the `project_id` and `path` in a `config.json` file for the project (e.g., in `$VOX_HOME/context/projects/<project_id>/config.json`) and then running:
     ```bash
     python CTX/extensions/vector_store.py index-dir <project_id>
     ```

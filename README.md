@@ -56,4 +56,4 @@ vox list-docs <project_id>
 
 ## Installation
 
-Installed automatically via `ctx-core/install.sh`.
+Installed automatically via `vox-core/install.sh`.
